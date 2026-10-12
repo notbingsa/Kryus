@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         body {
             font-family: 'Lexend', sans-serif;
@@ -20,17 +18,14 @@
             transition: background-color 0.5s ease, background-image 0.5s ease;
             user-select: none;
         }
-
         .theme-home {
             background-color: #000000;
             background-image: linear-gradient(135deg, #0f172a 0%, #000000 100%);
         }
-
         #page-games {
             display: block !important;
             overflow-y: auto;
         }
-
         .games-grid {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -42,7 +37,6 @@
             align-items: start;
             height: auto;
         }
-
         .game-card {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -57,7 +51,6 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
-
         .game-card:hover {
             transform: scale(1.05);
             background: rgba(51, 65, 85, 0.8);
@@ -65,7 +58,6 @@
             color: #ffffff;
             box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
         }
-
         #game-wrapper {
             position: absolute;
             top: 50%;
@@ -80,7 +72,6 @@
             align-items: center;
             /* Centers everything horizontally */
         }
-
         #game-frame-container {
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(12px);
@@ -94,7 +85,6 @@
             padding: 0;
             overflow: hidden;
         }
-
         .toolbar-top {
             height: 50px;
             display: flex;
@@ -104,7 +94,6 @@
             background: rgba(15, 23, 42, 1);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-
         .iframe-wrapper {
             flex-grow: 1;
             width: 100%;
