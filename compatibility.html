@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kryus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000000;
+            color: #ffffff;
+            user-select: none;
+        }
+        #page-games {
+            display: block !important;
+            overflow-y: auto;
+        }
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 1.5rem;
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 6rem 2rem 2rem 2rem;
+            align-items: start;
+            height: auto;
+        }
+        .game-card {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-weight: bold;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .game-card:hover {
+            transform: scale(1.05);
+            background: rgba(51, 65, 85, 0.8);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: #ffffff;
+            box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.2);
+        }
+        #game-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1000px;
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #game-frame-container {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            width: 100%;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            overflow: hidden;
+        }
+        .toolbar-top {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0 1rem;
+            background: rgba(15, 23, 42, 1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .iframe-wrapper {
+            flex-grow: 1;
+            width: 100%;
+            background: #000;
+        }
+        .toolbar {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        :fullscreen .toolbar-top {
+            display: none;
+        }
+        :fullscreen #game-frame-container {
+            height: 100vh !important;
+        }
+        .fallback-placeholder {
+            width: 100%;
+            height: 100%;
+            background-color: #333;
+            color: white;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        #taskbar-container {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #toggle-handle {
+            transition: opacity 0.3s ease;
+        }
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        .page.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 2rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px -15px rgba(255, 255, 255, 0.1);
+            max-width: 480px;
+            width: 90%;
+            text-align: left;
+            color: #ffffff;
+        }
+        .fancy {
+            background: #ffffff;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        .card h1 {
+            font-size: 2.25rem;
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .card h1 svg {
+            stroke: #ffffff;
+            width: 1.75rem;
+            height: 1.75rem;
+            flex-shrink: 0;
+        }
+        .card h2 svg {
+            stroke: #94a3b8;
+            width: 1.2rem;
+            height: 1.2rem;
+            flex-shrink: 0;
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin: 0 0 0.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid;
+            border-image: linear-gradient(90deg, #ffffff, transparent) 1;
+        }
+        .credits-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .credits-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.75rem;
+        }
+        .credits-list li strong {
+            font-size: 1.05rem;
+        }
+        .credits-list li span {
+            font-size: 0.95rem;
+            color: #94a3b8;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center bg-black text-white">
+
+    <div id="loading-screen"
+        class="fixed inset-0 bg-black flex flex-col justify-center items-center z-50 transition-opacity duration-1000">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+        <p class="text-white mt-4 font-light tracking-wide">please wait whilst we load</p>
+    </div>
+
+    <div id="ui-container">
+        <!-- HOME PAGE -->
+        <div id="page-home" class="page active">
+            <div class="fixed bottom-4 left-4 z-20">
+                <div id="live-clock" class="text-white text-base md:text-lg font-medium"></div>
+            </div>
+            
+            <div class="fixed bottom-4 right-4 z-20 text-white text-base md:text-lg font-medium">
+                Compatibility version
+            </div>
+
+            <main id="main-content" class="text-center p-6 z-10">
+                <h1 class="text-5xl md:text-7xl font-bold text-white tracking-tight">KRYUS v1</h1>
+            </main>
+        </div>
+
+        <!-- CREDITS PAGE -->
+        <div id="page-credits" class="page">
+            <div class="card">
+                <h1 class="fancy">Credits</h1>
+                <h2><i data-lucide="users"></i> Team</h2>
+                <ul class="credits-list">
+                    <li>
+                        <strong class="fancy">d4rkn1ght</strong>
+                        <span>Owner + Developer</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- DIRECTORY PAGE -->
+        <div id="page-games" class="page">
+            <div class="games-grid" id="games-grid"></div>
+            <div id="game-wrapper" class="hidden flex flex-col items-center">
+                <button onclick="f()"
+                    class="mb-4 text-sm px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition text-white border border-white/20">
+                    Go Back
+                </button>
+                <div id="game-frame-container" class="flex flex-col">
+                    <div class="iframe-wrapper">
+                        <iframe id="game-iframe" class="w-full h-full border-none" onload="m()" allow="fullscreen; autoplay; gamepad; clipboard-write; clipboard-read; midi; encrypted-media"></iframe>
+                    </div>
+                    <div class="toolbar text-white">
+                        <span id="game-title" class="font-bold text-white"></span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="p()" id="mute-btn"
+                                class="p-1 hover:bg-white/20 rounded-lg transition">
+                                <i data-lucide="volume-2" id="mute-icon" class="w-5 h-5"></i>
+                            </button>
+                            <button onclick="u()" id="fs-btn"
+                                class="p-1 hover:bg-white/20 rounded-lg transition">
+                                <i data-lucide="maximize" id="fs-icon" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="taskbar-container" class="fixed bottom-8 z-30 flex flex-col items-center">
+        <div
+            class="bg-black/80 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-2 flex items-center gap-3 shadow-2xl">
+            <button id="btn-home" onclick="v('home')"
+                class="text-white p-2 hover:bg-white/20 rounded-xl transition-all">
+                <i data-lucide="home" class="w-6 h-6"></i>
+            </button>
+
+            <button id="btn-games" onclick="v('games')"
+                class="text-white p-2 hover:bg-white/20 rounded-xl transition-all">
+                <i data-lucide="gamepad-2" class="w-6 h-6"></i>
+            </button>
+
+            <button id="btn-credits" onclick="v('credits')"
+                class="text-white p-2 hover:bg-white/20 rounded-xl transition-all">
+                <i data-lucide="users" class="w-6 h-6"></i>
+            </button>
+            <div class="w-px h-8 bg-white/20"></div>
+            <button onclick="t(false)"
+                class="text-white p-2 hover:bg-white/20 rounded-xl transition-all">
+                <i data-lucide="chevron-down" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </div>
+
+    <button id="toggle-handle" onclick="t(true)"
+        class="fixed bottom-4 z-30 text-white bg-black/80 backdrop-blur-md border border-white/20 p-2 rounded-full opacity-0 pointer-events-none transition-all hover:bg-white/20">
+        <i data-lucide="chevron-up" class="w-6 h-6"></i>
+    </button>
+
+    <script>
+        (function () {
+            function x(f, c) {
+                try {
+                    const w = f.contentWindow;
+                    const d = f.contentDocument || w.document;
+                    if (!w || !d) return false;
+                    c(w, d);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+            function y(f, z) {
+                let r = false;
+                x(f, (w, d) => {
+                    r = true;
+                    w.__m = z;
+
+                    b(w);
+                    k(w);
+                    n(d, z);
+                    l(w, z);
+
+                    o(w, d);
+
+                    for (const cf of d.querySelectorAll("iframe")) {
+                        r = y(cf, z) || r;
+                    }
+                });
+                return r;
+            }
+
+            function o(w, d) {
+                if (d.__o) return;
+                d.__o = true;
+
+                const observer = new MutationObserver(() => {
+                    if (!w.__m) return;
+                    n(d, true);
+                    l(w, true);
+                });
+
+                observer.observe(d.body || d.documentElement, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+
+            function n(d, z) {
+                for (const e of d.querySelectorAll("audio, video")) {
+                    e2(e, z);
+                }
+            }
+
+            function e2(e, z) {
+                if (z) {
+                    if (!e.muted) e.dataset.tm = "true";
+                    e.muted = true;
+                    e.volume = 0;
+                    return;
+                }
+                if (e.dataset.tm === "true") {
+                    e.muted = false;
+                    delete e.dataset.tm;
+                }
+            }
+
+            function k(w) {
+                if (w.__mp) return;
+                w.__mp = true;
+                try {
+                    const mp = w.HTMLMediaElement?.prototype;
+                    const op = mp?.play;
+                    if (typeof op === "function" && !op.__w) {
+                        mp.play = function (...a) {
+                            if (w.__m) e2(this, true);
+                            return op.apply(this, a);
+                        };
+                        mp.play.__w = true;
+                    }
+                } catch (e) { }
+            }
+
+            function b(w) {
+                if (w.__ap) return;
+                w.__ap = true;
+                w.__ac = w.__ac || [];
+
+                wc(w, "AudioContext");
+                wc(w, "webkitAudioContext");
+
+                try {
+                    const ba = w.BaseAudioContext || w.AudioContext || w.webkitAudioContext;
+                    if (ba && ba.prototype) {
+                        const p = ba.prototype;
+
+                        const or = p.resume;
+                        if (typeof or === 'function' && !or.__w) {
+                            p.resume = function (...a) {
+                                if (w.__m) {
+                                    return Promise.resolve();
+                                }
+                                return or.apply(this, a);
+                            };
+                            or.__w = true;
+                        }
+
+                        const oc = p.createGain;
+                        if (typeof oc === 'function' && !oc.__w) {
+                            p.createGain = function (...a) {
+                                const g = oc.apply(this, a);
+                                if (w.__m) {
+                                    try { g.gain.value = 0; } catch (e) { }
+                                }
+                                return g;
+                            };
+                            oc.__w = true;
+                        }
+                    }
+                } catch (e) { }
+            }
+
+            function wc(w, key) {
+                const O = w[key];
+                if (typeof O !== "function" || O.__w) return;
+                try {
+                    function W(...a) {
+                        const c = new O(...a);
+                        if (!w.__ac.includes(c)) {
+                            w.__ac.push(c);
+                        }
+                        if (w.__m) {
+                            sc(c, true);
+                        }
+                        return c;
+                    }
+                    W.prototype = O.prototype;
+                    Object.setPrototypeOf(W, O);
+                    W.__w = true;
+                    w[key] = W;
+                } catch (e) { }
+            }
+
+            function l(w, z) {
+                try { w.Howler?.mute?.(z); } catch (e) { }
+                const cs = [
+                    w.audioContext,
+                    w.Module?.audioContext,
+                    w.Module?.SDL2?.audioContext,
+                    w.unityInstance?.Module?.audioContext,
+                    w.unityInstance?.Module?.SDL2?.audioContext,
+                    ...(w.__ac || []),
+                ];
+                for (const c of cs) {
+                    sc(c, z);
+                }
+            }
+
+            function sc(c, z) {
+                if (!c) return;
+                try {
+                    if (z) {
+                        if (typeof c.suspend === "function" && c.state !== "closed") {
+                            c.suspend().catch?.(() => { });
+                        }
+                    } else {
+                        if (typeof c.resume === "function" && c.state !== "closed") {
+                            c.resume().catch?.(() => { });
+                        }
+                    }
+                } catch (e) { }
+            }
+
+            function cl() {
+                const i = document.getElementById('game-iframe');
+                if (i) {
+                    x(i, (w, d) => {
+                        if (w.__m) {
+                            n(d, true);
+                            l(w, true);
+                        }
+                    });
+                }
+                requestAnimationFrame(cl);
+            }
+            requestAnimationFrame(cl);
+
+            window.fm = function (f, z) {
+                y(f, z);
+            };
+        })();
+
+        let sm = false;
+
+        function p() {
+            sm = !sm;
+            const mi = document.getElementById('mute-icon');
+            if (sm) {
+                mi.setAttribute('data-lucide', 'volume-x');
+            } else {
+                mi.setAttribute('data-lucide', 'volume-2');
+            }
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            m();
+        }
+
+        function m() {
+            const i = document.getElementById('game-iframe');
+            if (i && typeof window.fm === 'function') {
+                window.fm(i, sm);
+            }
+        }
+
+        lucide.createIcons();
+
+        const items = [
+            { gurl: "Li9hc3NldHMvZ2FtZXMvQ3JheXkgQ2F0dGxlIDNEL2ZyYW1lLmh0bWw=", iurl: "./assets/games/Crazy Cattle 3D/image.webp" },
+            { gurl: "Li9hc3NldHMvZ2FtZXMvRHJpdmUgTWFkL2ZyYW1lLmh0bWw=", iurl: "./assets/games/Drive Mad/image.webp" },
+            { gurl: "Li9hc3NldHMvZ2FtZXMvRnJ1aXQgTmluamEvZnJhbWUuaHRtbA==", iurl: "./assets/games/Fruit Ninja/image.webp" },
+            { gurl: "Li9hc3NldHMvZ2FtZXMvT3Blcml1cy9mcmFtZS5odG1s", iurl: "./assets/games/Operius/image.webp" },
+            { gurl: "Li9hc3NldHMvZ2FtZXMvUGxhbnRzIFZzIFpvbWJpZXMvZnJhbWUuaHRtbA==", iurl: "./assets/games/Plants Vs Zombies/image.webp" },
+            { gurl: "Li9hc3NldHMvZ2FtZXMvUG9uZy9mcmFtZS5odG1s", iurl: "./assets/games/Pong/image.webp" },
+            { gurl: "Li9hc3NldHMvZ2FtZXMvUnVuIDMvZnJhbWUuaHRtbA==", iurl: "./assets/games/Run 3/image.webp" },
+            { gurl: "Li9hc3NldHMvZ2FtZXMvU3RpY2ttYW4gSG9vay9mcmFtZS5odG1s", iurl: "./assets/games/Stickman Hook/image.webp" },
+            { gurl: "Li9hc3NldHMvZ2FtZXMvU3Vid2F5IFN1cmZlcnMvZnJhbWUuaHRtbA==", iurl: "./assets/games/Subway Surfers/image.webp" },
+            { gurl: "Li9hc3NldHMvZ2FtZXMvU3Vydml2YWwgUmFjZS9mcmFtZS5odG1s", iurl: "./assets/games/Survival Race/image.webp" }
+        ];
+
+        function g(encodedUrl) {
+            const gd = document.getElementById('games-grid');
+            const gw = document.getElementById('game-wrapper');
+            const gi = document.getElementById('game-iframe');
+            gd.classList.add('hidden');
+            gw.classList.remove('hidden');
+            gi.src = atob(encodedUrl);
+            lucide.createIcons();
+        }
+
+        function f() {
+            const gd = document.getElementById('games-grid');
+            const gw = document.getElementById('game-wrapper');
+            const gi = document.getElementById('game-iframe');
+            gd.classList.remove('hidden');
+            gw.classList.add('hidden');
+            gi.src = '';
+        }
+
+        function r() {
+            const gd = document.querySelector('.games-grid');
+            if (!gd) return;
+
+            gd.innerHTML = items.map(it => `
+                <div class="game-card" 
+                     onclick="g('${it.gurl}')" 
+                     style="position: relative; cursor: pointer; overflow: hidden; border-radius: 12px; width: 100%;">
+                    <img 
+                        src="${it.iurl}" 
+                        alt=""
+                        style="display: block; width: 100%; height: 100%; object-fit: cover;" 
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    >
+                    <div class="fallback-placeholder" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                        Missing
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function u() {
+            const c = document.getElementById('game-frame-container');
+            const ic = document.getElementById('fs-icon');
+
+            if (!document.fullscreenElement) {
+                c.requestFullscreen().catch(err => {});
+                c.style.position = 'fixed';
+                c.style.width = '100vw';
+                c.style.height = '100vh';
+                c.style.borderRadius = '0';
+                ic.setAttribute('data-lucide', 'minimize');
+            } else {
+                document.exitFullscreen();
+                c.style.position = "";
+                c.style.height = "";
+                c.style.width = '90%';
+                c.style.borderRadius = '1rem';
+                ic.setAttribute('data-lucide', 'maximize');
+            }
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const c = document.getElementById('game-frame-container');
+            const ic = document.getElementById('fs-icon');
+
+            if (!document.fullscreenElement) {
+                c.style.position = "";
+                c.style.height = "";
+                c.style.width = '90%';
+                c.style.borderRadius = '1rem';
+                ic.setAttribute('data-lucide', 'maximize');
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+        });
+
+        let cv = 'home';
+        function v(view) {
+            if (view === cv) return;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${view}`).classList.add('active');
+            document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('bg-white/20'));
+            document.getElementById(`btn-${view}`).classList.add('bg-white/20');
+            cv = view;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const ib = document.getElementById(`btn-${cv}`);
+            if (ib) ib.classList.add('bg-white/20');
+            r();
+        });
+
+        function t(show) {
+            const tc = document.getElementById('taskbar-container');
+            const th = document.getElementById('toggle-handle');
+            if (show) {
+                tc.style.transform = 'translateY(0)';
+                th.style.opacity = '0';
+                th.style.pointerEvents = 'none';
+            } else {
+                tc.style.transform = 'translateY(150%)';
+                th.style.opacity = '1';
+                th.style.pointerEvents = 'auto';
+            }
+        }
+
+        function ck() {
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-GB', { hour12: false });
+            const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const ce = document.getElementById('live-clock');
+            if (ce) ce.textContent = `${time} | ${date}`;
+        }
+        setInterval(ck, 1000);
+        ck();
+
+        window.addEventListener('load', () => {
+            const ls = document.getElementById('loading-screen');
+            setTimeout(() => {
+                ls.style.opacity = '0';
+                setTimeout(() => { ls.style.display = 'none'; }, 1000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
